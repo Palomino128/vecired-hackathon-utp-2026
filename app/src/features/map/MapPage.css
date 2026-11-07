@@ -1,0 +1,15 @@
+.map-page .map-actions { display:flex; justify-content:space-between; gap:10px; margin: 3px 0 13px; }
+.map-page .map-actions button { flex: 1; font-size:12px; }
+.map-page .map-count { color:#486b63; font-size:12px; margin: 2px 0 10px; }
+.map-page .map-count strong { color:var(--brand); }
+.map-page .map-gps-status { padding:10px 13px; border-radius:11px; background:#e6f4ee; color:#2a6055; font-size:12px; line-height:1.5; }
+.map-page .map-note { color:#75888b; font-size:10px; line-height:1.5; margin:8px 0 20px; }
+.map-page .map-selected { background:#e7f5f0; border:1px solid #c3ded3; border-radius:16px; padding:14px; margin:15px 0 20px; }
+.map-page .map-selected h2 { color:#28544d; font-size:14px; margin:0 0 10px; }
+.map-page .map-list-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:20px 0 11px; }
+.map-page .map-list-header h2 { font-size:17px; margin:0; }
+.map-page .map-list-header span { color:var(--muted); font-size:11px; }
+.map-page .map-offline { border:1px dashed #bbd7d0; background:#ecf7f3; border-radius:16px; padding:20px; text-align:center; line-height:1.5; }
+.map-page .map-offline>span { display:block; font-size:30px; margin-bottom:6px; }
+.map-page .map-offline strong { font-size:14px; }
+.map-page .map-offline p { font-size:12px; color:#65777f; margin:8px 0 0; }
