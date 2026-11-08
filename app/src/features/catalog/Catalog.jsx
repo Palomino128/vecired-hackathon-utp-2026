@@ -1,3 +1,4 @@
+import CategoryIcon from '../../components/CategoryIcon'
 import OfferCard from '../../components/OfferCard'
 import { CATEGORIAS, ZONAS } from '../../data/demoData'
 
@@ -18,9 +19,9 @@ export default function Catalog({ ofertas, busqueda, onBusqueda, categoria, onCa
       <div className="chip-row" role="group" aria-label="Filtrar por categoría">
         {CATEGORIAS.map((opcion) => <button key={opcion} type="button" className={`chip ${categoria === opcion ? 'selected' : ''}`} aria-pressed={categoria === opcion} onClick={() => onCategoria(opcion)}>{opcion}</button>)}
       </div>
-      <div className="list-heading"><h2>Resultados</h2><button type="button" className="map-inline-button" onClick={onMap}>📍 Ver mapa</button><span>{filtradas.length} encontrados</span></div>
+      <div className="list-heading"><h2>Resultados</h2><button type="button" className="map-inline-button" onClick={onMap}>Ver mapa</button><span>{filtradas.length} encontrados</span></div>
       <div className="offer-list">
-        {filtradas.length > 0 ? filtradas.map((oferta) => <OfferCard key={oferta.id} oferta={oferta} onOpen={onOpen} />) : <div className="empty-state"><span>🔎</span><h3>No hay resultados</h3><p>Prueba con otra categoría, zona o palabra.</p><button className="button-outline" type="button" onClick={() => { onCategoria('Todos'); onZona('Todas las zonas'); onBusqueda('') }}>Borrar filtros</button></div>}
+        {filtradas.length > 0 ? filtradas.map((oferta) => <OfferCard key={oferta.id} oferta={oferta} onOpen={onOpen} />) : <div className="empty-state"><span aria-hidden="true"><CategoryIcon categoria="Buscar" size={30} /></span><h3>No hay resultados</h3><p>Prueba con otra categoría, zona o palabra.</p><button className="button-outline" type="button" onClick={() => { onCategoria('Todos'); onZona('Todas las zonas'); onBusqueda('') }}>Borrar filtros</button></div>}
       </div>
       <p className="demo-disclaimer">Contenido ficticio de demostración; las ofertas no representan negocios verificados.</p>
     </section>

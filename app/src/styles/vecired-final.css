@@ -1,0 +1,86 @@
+/* Cierre UI de VeciRed - móvil primero y accesible. */
+.bottom-nav {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  padding: 8px 5px calc(9px + env(safe-area-inset-bottom)) !important;
+  gap: 0;
+}
+.bottom-nav-item {
+  min-height: 60px;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.bottom-nav-icon { width: 26px; height: 26px; }
+.bottom-nav-icon svg { display: block; width: 23px; height: 23px; }
+.bottom-nav-item.is-publish .bottom-nav-icon {
+  top: -11px;
+  width: 47px;
+  height: 47px;
+  border-radius: 14px;
+  border: 3px solid #fff;
+}
+.bottom-nav-item.is-publish .bottom-nav-icon svg { width: 25px; height: 25px; }
+.bottom-nav-item.is-publish .bottom-nav-label { padding-top: 17px; }
+.vecired-photo-field { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; margin-top: 8px; }
+.vecired-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.vecired-photo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 45px;
+  padding: 10px 16px;
+  border: 1px solid #0c796c;
+  background: #e9f7f2;
+  color: #095e54;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.3;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.vecired-photo-button:hover { background: #d9f0e7; }
+.vecired-photo-button svg { width: 21px; height: 21px; flex: 0 0 21px; }
+.vecired-photo-input:focus-visible + .vecired-photo-button { outline: 3px solid #4aa898; outline-offset: 3px; }
+.vecired-photo-button.is-disabled { opacity: .5; cursor: not-allowed; }
+.vecired-photo-hint { color: #64747a; font-size: 12px; line-height: 1.4; }
+.vecired-my-items .vecired-item { background: #fff; border: 1px solid #d9e8e3; border-radius: 16px; padding: 15px; margin-bottom: 14px; }
+.vecired-my-items .vecired-item h2 { font-size: 17px; line-height: 1.35; margin: 0 0 8px; }
+.vecired-item-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.vecired-state { padding: 4px 10px; background: #e7f4f0; color: #176c61; font-size: 11px; font-weight: 700; border-radius: 20px; }
+.vecired-item-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+.vecired-item-actions button { min-height: 40px; padding: 8px 12px; }
+.vecired-my-items .form-label { display: block; margin-top: 12px; }
+.vecired-my-items .form-label input, .vecired-my-items .form-label textarea, .vecired-my-items .form-label select { width: 100%; }
+.vecired-help { font-size: 12px; color: #61747c; line-height: 1.5; }
+.vecired-inline-error { color: #a92525; font-size: 13px; }
+@media (max-width: 365px) {
+  .bottom-nav-item { font-size: 10px; }
+  .bottom-nav-item.is-publish .bottom-nav-icon { width: 44px; height: 44px; }
+  .vecired-photo-button { width: 100%; }
+}
+.home-category span svg, .category-option span svg { width: 23px; height: 23px; }
+.offer-card-visual svg { width: 32px; height: 32px; }
+.detail-hero svg { width: 75px; height: 75px; }
+.pending-icon svg, .tutorial-emoji svg { width: 36px; height: 36px; }
+.tutorial-banner>span:first-child svg { width: 26px; height: 26px; }
+.profile-trigger svg { width: 21px; height: 21px; }
+/* Gana frente a estilos globales .form-label input del prototipo. */
+.vecired-photo-field input.vecired-photo-input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  clip-path: inset(50%);
+}

@@ -1,3 +1,4 @@
+import CategoryIcon from '../../components/CategoryIcon'
 import { useEffect, useMemo, useState } from 'react'
 import { CATEGORIAS, ZONAS } from '../../data/demoData'
 import { CENTROS_ZONA, CENTRO_AREQUIPA, ofertaAPunto } from '../../data/ubicaciones'
@@ -62,10 +63,10 @@ export default function MapPage({ ofertas, categoria, onCategoria, zona, onZona,
     {enLinea ? <>
       <VeciRedMap puntos={puntos} alSeleccionar={(punto) => setSeleccionadoId(punto.id)} posicionUsuario={posicionUsuario} destacadoId={seleccionadoId} centro={centro} />
       <p className="map-note">Mapa base: © OpenStreetMap. Los puntos son aproximados y no muestran domicilios reales.</p>
-    </> : <div className="map-offline" role="status"><span aria-hidden="true">📵</span><strong>Mapa base no disponible sin internet</strong><p>En este prototipo puedes consultar la lista de ejemplo que ya viene con la aplicación. El almacenamiento offline real lo integrará el Integrante 4.</p></div>}
+    </> : <div className="map-offline" role="status"><span aria-hidden="true"><CategoryIcon categoria="Alertas" /></span><strong>Mapa base no disponible sin internet</strong><p>En este prototipo puedes consultar la lista de ejemplo que ya viene con la aplicación. El almacenamiento offline real lo integrará el Integrante 4.</p></div>}
     {seleccionado && <div className="map-selected"><h2>Oferta seleccionada</h2><OfferCard oferta={seleccionado} onOpen={onOpen} /></div>}
     <div className="map-list-header"><h2>{enLinea ? 'Ofertas en el mapa' : 'Ofertas de ejemplo'}</h2><span>{ofertasFiltradas.length} resultados</span></div>
-    <div className="offer-list">{ofertasFiltradas.length ? ofertasFiltradas.map((oferta) => <OfferCard key={oferta.id} oferta={oferta} onOpen={onOpen} />) : <div className="empty-state"><span>🧭</span><h3>No hay ofertas para mostrar</h3><p>Prueba cambiando la categoría, la zona o la búsqueda.</p></div>}</div>
+    <div className="offer-list">{ofertasFiltradas.length ? ofertasFiltradas.map((oferta) => <OfferCard key={oferta.id} oferta={oferta} onOpen={onOpen} />) : <div className="empty-state"><span><CategoryIcon categoria="Mapa" /></span><h3>No hay ofertas para mostrar</h3><p>Prueba cambiando la categoría, la zona o la búsqueda.</p></div>}</div>
     <p className="demo-disclaimer">Información ficticia para demostración. La conexión con PostgreSQL y los puntos de emergencia será implementada por los demás integrantes.</p>
   </section>
 }
