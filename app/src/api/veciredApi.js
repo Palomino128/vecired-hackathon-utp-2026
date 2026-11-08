@@ -11,10 +11,12 @@ export function obtenerToken() {
 
 export function guardarToken(token) {
   localStorage.setItem(TOKEN_KEY, token)
+  window.dispatchEvent(new Event('vecired:auth-changed'))
 }
 
 export function cerrarSesion() {
   localStorage.removeItem(TOKEN_KEY)
+  window.dispatchEvent(new Event('vecired:auth-changed'))
 }
 
 async function peticion(ruta, opciones = {}) {

@@ -84,3 +84,35 @@
   opacity: 0 !important;
   clip-path: inset(50%);
 }
+
+
+/* Corrección de la navegación inferior */
+.bottom-nav {
+  align-items: stretch !important;
+}
+
+.bottom-nav-item.is-publish {
+  justify-content: center !important;
+  padding: 7px 0 4px !important;
+  gap: 5px !important;
+}
+
+.bottom-nav-item.is-publish .bottom-nav-icon {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 26px !important;
+  height: 26px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+}
+
+.bottom-nav-item.is-publish .bottom-nav-icon svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+.bottom-nav-item.is-publish .bottom-nav-label {
+  padding-top: 0 !important;
+}

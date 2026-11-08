@@ -34,6 +34,35 @@ import {
 
 import './App.css'
 import './styles/vecired-final.css'
+import OfflineWidget from './offline/OfflineWidget'
+import {
+  saveToOutbox,
+  getOutboxItems,
+  sincronizarPendientes,
+  obtenerIdVecinoActual,
+} from './offline/syncManager'
+
+// Ofertas textuales guardadas localmente mientras no había red.
+function aOfertaPendiente(entrada) {
+  const datos = entrada.data || {}
+  const categoria = datos.category || 'Hogar'
+  return {
+    id: entrada.client_id,
+    titulo: datos.title || '',
+    descripcion: datos.description || '',
+    detalle: datos.description || '',
+    categoria,
+    zona: datos.neighborhood || 'Zona vecinal',
+    precio: datos.price_range || 'A coordinar',
+    vendedor: 'Pendiente de sincronización',
+    icono: ICONOS[categoria] || '🏠',
+    imagenes: [],
+    opiniones: [],
+    lat: null,
+    lng: null,
+    origen: 'pendiente',
+  }
+}
 
 // ============================================================
 // MÓDULOS PENDIENTES
@@ -156,13 +185,20 @@ export default function App() {
         if (publicaciones.length > 0) {
           const ofertasReales = publicaciones.map(aOferta)
 
-          setOfertas(ofertasReales)
+          setOfertas((anteriores) => [
+            ...anteriores.filter((oferta) => oferta.origen === 'pendiente'),
+            ...ofertasReales,
+          ])
           setModoDemostracion(false)
         } else {
           // Se conservan las ofertas de demostración
           // cuando todavía no hay publicaciones reales.
-          setOfertas(OFERTAS_DEMO)
-          setModoDemostracion(true)
+          setOfertas((anteriores) => {
+            const pendientes = anteriores.filter(
+              (oferta) => oferta.origen === 'pendiente'
+            )
+            return pendientes.length ? pendientes : OFERTAS_DEMO
+          })
         }
 
       } catch (error) {
@@ -179,6 +215,85 @@ export default function App() {
 
     return () => {
       activo = false
+    }
+  }, [])
+
+  // ----------------------------------------------------------
+  // COLA OFFLINE: MOSTRAR PENDIENTES Y SINCRONIZAR AL VOLVER
+  // ----------------------------------------------------------
+
+  useEffect(() => {
+    let montado = true
+
+    async function cargarPendientes() {
+      try {
+        const usuario = obtenerIdVecinoActual()
+        const entradas = await getOutboxItems()
+        if (!montado) return
+
+        setOfertas((anteriores) => {
+          const otras = anteriores.filter((oferta) => oferta.origen !== 'pendiente')
+          const pendientes = entradas
+            .filter((registro) => registro.owner_id === usuario && registro.entity === 'items')
+            .map(aOfertaPendiente)
+          return pendientes.length
+            ? [
+                ...pendientes,
+                ...otras.filter((oferta) => !OFERTAS_DEMO.some((demo) => demo.id === oferta.id)),
+              ]
+            : otras
+        })
+      } catch (error) {
+        console.warn('No se pudo leer la cola offline:', error)
+      }
+    }
+
+    async function recuperarConexion() {
+      if (!navigator.onLine || !obtenerToken()) return
+
+      try {
+        const resultado = await sincronizarPendientes()
+        if (!montado) return
+
+        await cargarPendientes()
+        if (resultado.sincronizadas > 0) {
+          const publicaciones = await obtenerPublicaciones()
+          if (!montado) return
+          if (Array.isArray(publicaciones)) {
+            setOfertas((anteriores) => [
+              ...anteriores.filter((oferta) => oferta.origen === 'pendiente'),
+              ...publicaciones.map(aOferta),
+            ])
+            setModoDemostracion(false)
+          }
+          setAviso(`${resultado.sincronizadas} publicación(es) pendiente(s) sincronizada(s) con PostgreSQL.`)
+        }
+        if (resultado.fallidas > 0) {
+          setAviso('Hay publicaciones sin sincronizar. Comprueba tu conexión y vuelve a intentarlo.')
+        }
+      } catch (error) {
+        console.warn('La sincronización quedó pendiente:', error.message)
+      }
+    }
+
+    function alConectar() {
+      recuperarConexion()
+    }
+
+    function alCambiarCuenta() {
+      cargarPendientes()
+      recuperarConexion()
+    }
+
+    cargarPendientes()
+    recuperarConexion()
+    window.addEventListener('online', alConectar)
+    window.addEventListener('vecired:auth-changed', alCambiarCuenta)
+
+    return () => {
+      montado = false
+      window.removeEventListener('online', alConectar)
+      window.removeEventListener('vecired:auth-changed', alCambiarCuenta)
     }
   }, [])
 
@@ -234,6 +349,31 @@ export default function App() {
       archivos = [],
       ...datosOferta
     } = oferta
+
+    // Al estar sin internet, solo pueden quedar pendientes los textos.
+    // Las fotografías requieren un envío real a /api/uploads.
+    if (!navigator.onLine) {
+      if (archivos.length > 0) {
+        throw new Error('Para publicar con fotografías necesitas conexión. Retira las fotos o vuelve a intentarlo al conectarte.')
+      }
+
+      const registro = await saveToOutbox(aPublicacion(datosOferta))
+      const pendiente = aOfertaPendiente(registro)
+      setOfertas((anteriores) => [
+        pendiente,
+        ...(modoDemostracion
+          ? anteriores.filter((actual) => actual.origen === 'pendiente')
+          : anteriores.filter((actual) => actual.id !== pendiente.id)),
+      ])
+      setModoDemostracion(false)
+      setMostrarPublicar(false)
+      setCategoria('Todos')
+      setZona('Todas las zonas')
+      setBusqueda('')
+      navegar('explorar')
+      setAviso('Publicación guardada en este dispositivo. Se enviará cuando vuelva la conexión e inicies sesión.')
+      return
+    }
 
     // 1. Subir imágenes al backend.
     // Si no hay imágenes, devuelve un arreglo vacío.
@@ -359,7 +499,7 @@ export default function App() {
             onClick={() => navegar('cuenta')}
             aria-label="Mi cuenta"
           >
-            👤
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
           </button>
 
         </div>
@@ -685,14 +825,14 @@ export default function App() {
       {mostrarPublicar && (
 
         <PublishWizard
-          onClose={() =>
-            setMostrarPublicar(false)
-          }
+          onClose={() => setMostrarPublicar(false)}
           onCreate={publicar}
+          enLinea={enLinea}
         />
 
       )}
 
+      <OfflineWidget />
     </div>
   )
 }

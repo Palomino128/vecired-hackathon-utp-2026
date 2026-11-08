@@ -1,12 +1,14 @@
 // Cinco accesos principales, todos con iconos SVG del mismo estilo.
 // Alertas se consulta desde Ayuda; Mi cuenta permanece en la cabecera.
+
 const ENLACES = [
   { id: 'inicio', etiqueta: 'Inicio' },
   { id: 'explorar', etiqueta: 'Explorar' },
-  { id: 'mapa', etiqueta: 'Mapa' },
   { id: 'publicar', etiqueta: 'Publicar' },
+  { id: 'mapa', etiqueta: 'Mapa' },
   { id: 'solidaridad', etiqueta: 'Ayuda' },
 ]
+
 
 function Icono({ id }) {
   const formas = {

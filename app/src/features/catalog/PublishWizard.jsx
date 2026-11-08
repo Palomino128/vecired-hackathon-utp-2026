@@ -14,7 +14,7 @@ const INICIAL = {
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_MB = 5
 
-export default function PublishWizard({ onClose, onCreate }) {
+export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
   const [paso, setPaso] = useState(1)
   const [datos, setDatos] = useState(INICIAL)
   const [archivos, setArchivos] = useState([])
@@ -269,14 +269,26 @@ export default function PublishWizard({ onClose, onCreate }) {
               </label>
 
               <div className="form-label">
-                  Fotografías (máximo 3)
-                  <PhotoFileField multiple count={archivos.length} onChange={seleccionarImagenes} disabled={archivos.length >= 3 || guardando} />
-                </div>
+                Fotografías (máximo 3)
+                <PhotoFileField
+                  multiple
+                  count={archivos.length}
+                  onChange={seleccionarImagenes}
+                  disabled={!enLinea || archivos.length >= 3 || guardando}
+                />
+              </div>
 
               <p className="hint">
                 JPG, PNG o WebP. Máximo 5 MB por fotografía.
                 Las imágenes son opcionales.
               </p>
+
+              {!enLinea && (
+                <p className="hint" role="status">
+                  Sin conexión: puedes guardar esta publicación sin fotos.
+                  Quedará pendiente en este dispositivo y se enviará al recuperar la conexión.
+                </p>
+              )}
 
               {vistas.length > 0 && (
                 <div
@@ -360,7 +372,9 @@ export default function PublishWizard({ onClose, onCreate }) {
               >
                 {guardando
                   ? 'Guardando publicación...'
-                  : 'Publicar oferta'}
+                  : enLinea
+                    ? 'Publicar oferta'
+                    : 'Guardar pendiente sin conexión'}
               </button>
             )}
           </div>
