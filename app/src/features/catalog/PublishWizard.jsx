@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CATEGORIAS, ICONOS, ZONAS } from '../../data/demoData'
+import { saveToOutbox } from '../../offline/syncManager'
 
 const INICIAL = { titulo: '', categoria: 'Comida', descripcion: '', zona: 'Cercado', precio: '' }
 
@@ -7,6 +8,7 @@ export default function PublishWizard({ onClose, onCreate }) {
   const [paso, setPaso] = useState(1)
   const [datos, setDatos] = useState(INICIAL)
   const [error, setError] = useState('')
+  const [alertaOffline, setAlertaOffline] = useState('')
 
   useEffect(() => {
     const cerrarEsc = (evento) => { if (evento.key === 'Escape') onClose() }
@@ -23,18 +25,30 @@ export default function PublishWizard({ onClose, onCreate }) {
     setError('')
     setPaso((actual) => Math.min(3, actual + 1))
   }
-  function crear(evento) {
+  async function crear(evento) {
     evento.preventDefault()
     if (!datos.titulo.trim() || !datos.descripcion.trim() || !datos.zona) {
       setError('Completa todos los campos obligatorios.')
       return
     }
-    onCreate({
+    const nuevaOferta = {
       id: `local-${Date.now()}`, titulo: datos.titulo.trim(), categoria: datos.categoria,
       descripcion: datos.descripcion.trim(), detalle: datos.descripcion.trim(),
       zona: datos.zona, precio: datos.precio.trim() || 'A coordinar',
       icono: ICONOS[datos.categoria] || '🏠', vendedor: 'Mi publicación (solo demo)', opiniones: [],
-    })
+    }
+
+    if (!navigator.onLine) {
+      await saveToOutbox(nuevaOferta)
+      setAlertaOffline('Guardado localmente. Se sincronizará al recuperar la conexión')
+      setTimeout(() => {
+        setAlertaOffline('')
+        onCreate(nuevaOferta)
+      }, 1800)
+      return
+    }
+
+    onCreate(nuevaOferta)
   }
 
   return (
@@ -48,6 +62,24 @@ export default function PublishWizard({ onClose, onCreate }) {
           {paso === 2 && <div className="wizard-stage"><h3>Cuéntanos qué ofreces</h3><label className="form-label">Nombre del producto o servicio<input autoFocus maxLength={70} placeholder="Ej. Lasañas caseras" value={datos.titulo} onChange={(e) => cambiar('titulo', e.target.value)} /></label><label className="form-label">Descripción<textarea maxLength={280} rows={5} placeholder="Describe tu producto o servicio..." value={datos.descripcion} onChange={(e) => cambiar('descripcion', e.target.value)} /></label></div>}
           {paso === 3 && <div className="wizard-stage"><h3>¿Dónde lo ofreces?</h3><label className="form-label">Zona o barrio<select value={datos.zona} onChange={(e) => cambiar('zona', e.target.value)}>{ZONAS.filter((zona) => zona !== 'Todas las zonas').map((zona) => <option key={zona}>{zona}</option>)}</select></label><label className="form-label">Precio o modalidad (opcional)<input maxLength={60} placeholder="Ej. Desde S/ 15, A coordinar" value={datos.precio} onChange={(e) => cambiar('precio', e.target.value)} /></label><div className="info-panel">Esta publicación se mostrará únicamente en tu sesión actual. Aún no se guarda ni se envía a otros vecinos.</div></div>}
           {error && <p className="form-error" role="alert">{error}</p>}
+          {alertaOffline && (
+            <p
+              role="status"
+              aria-live="polite"
+              style={{
+                backgroundColor: '#16a34a',
+                color: '#ffffff',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                fontSize: '14px',
+                marginTop: '10px',
+                textAlign: 'center',
+              }}
+            >
+              {alertaOffline}
+            </p>
+          )}
           <div className="wizard-actions">{paso > 1 && <button className="button-outline" type="button" onClick={() => { setPaso((actual) => actual - 1); setError('') }}>Atrás</button>}{paso < 3 ? <button className="button-primary" type="button" onClick={siguiente}>Continuar →</button> : <button className="button-primary" type="submit">Publicar demostración</button>}</div>
         </form>
       </section>
