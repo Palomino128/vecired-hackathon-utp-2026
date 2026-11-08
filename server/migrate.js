@@ -22,6 +22,8 @@ async function runMigrations() {
     const files = [
       '001_schema.sql',
       '002_permissions_functions.sql',
+      '006_solidarity_mobility.sql',
+      '007_loan_lifecycle.sql',
     ];
 
     for (const file of files) {

@@ -81,6 +81,14 @@ export function crearPublicacion(datos) {
   })
 }
 
+export function apiSolidaridad(ruta, { method = 'GET', body, autenticado = false } = {}) {
+  return peticion(`/api/solidarity${ruta}`, { method, body, autenticado });
+}
+
+export function apiEmergencia(ruta, { method = 'GET', body, autenticado = false } = {}) {
+  return peticion(`/api/emergency${ruta}`, { method, body, autenticado });
+}
+
 
 export async function subirImagenes(archivos) {
   if (!archivos.length) return []

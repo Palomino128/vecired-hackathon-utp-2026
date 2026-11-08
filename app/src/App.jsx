@@ -13,6 +13,7 @@ import MyPublications from './features/catalog/MyPublications'
 import Account from './features/auth/Account'
 import Tutorial from './features/tutorial/Tutorial'
 import MapPage from './features/map/MapPage'
+import SolidarityHub from './features/solidarity/SolidarityHub'
 
 import {
   CATEGORIAS,
@@ -82,43 +83,6 @@ function aOfertaPendiente(entrada) {
     lng: null,
     origen: 'pendiente',
   }
-}
-
-// ============================================================
-// MÓDULOS PENDIENTES
-// ============================================================
-
-function PendingModule({
-  titulo,
-  icono,
-  texto,
-  responsable,
-  onBack,
-}) {
-  return (
-    <section className="pending-module container">
-      <div className="pending-icon" aria-hidden="true">
-        {icono}
-      </div>
-
-      <h1>{titulo}</h1>
-
-      <p>{texto}</p>
-
-      <div className="info-panel">
-        Este módulo será implementado por el {responsable}.
-        Todavía no realiza operaciones reales.
-      </div>
-
-      <button
-        className="button-outline"
-        type="button"
-        onClick={onBack}
-      >
-        Volver al inicio
-      </button>
-    </section>
-  )
 }
 
 // ============================================================
@@ -852,33 +816,9 @@ export default function App() {
         {/* SOLIDARIDAD */}
         {/* ================================================ */}
 
-        {pantalla === 'solidaridad' && (
+        {pantalla === 'solidaridad' && (<SolidarityHub mode="solidaridad" onBack={() => navegar('inicio')} />)}
 
-          <PendingModule
-            titulo="Red de solidaridad"
-            icono="🤝"
-            texto="Préstamos, donaciones, favores e intercambios con personas de tu comunidad."
-            responsable="Integrante 3"
-            onBack={() => navegar('inicio')}
-          />
-
-        )}
-
-        {/* ================================================ */}
-        {/* EMERGENCIA */}
-        {/* ================================================ */}
-
-        {pantalla === 'emergencia' && (
-
-          <PendingModule
-            titulo="Modo emergencia"
-            icono="🚨"
-            texto="Recursos y solicitudes de apoyo ante situaciones críticas. Esta vista todavía no envía alertas."
-            responsable="Integrante 3"
-            onBack={() => navegar('inicio')}
-          />
-
-        )}
+        {pantalla === 'emergencia' && (<SolidarityHub mode="emergencia" onBack={() => navegar('inicio')} />)}
 
       </main>
 

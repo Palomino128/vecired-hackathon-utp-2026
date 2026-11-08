@@ -18,7 +18,7 @@ const router = Router();
 // GET /api/emergency/resources - Directorio de apoyo comunitario
 router.get('/resources', async (req, res) => {
   try {
-    const { type, neighborhood } = req.query;
+    const { type, neighborhood, q } = req.query;
     const conditions = ['is_active = true'];
     const params = [];
     let paramIndex = 1;
@@ -32,6 +32,12 @@ router.get('/resources', async (req, res) => {
     if (neighborhood) {
       conditions.push(`neighborhood ILIKE $${paramIndex}`);
       params.push(`%${neighborhood}%`);
+      paramIndex++;
+    }
+
+    if (q) {
+      conditions.push(`(name ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR address ILIKE $${paramIndex})`);
+      params.push(`%${q}%`);
       paramIndex++;
     }
 
@@ -238,6 +244,13 @@ router.put('/reports/:id/status', requireAuth, async (req, res) => {
     if (!status) {
       return res.status(400).json({ error: 'Debe indicar el nuevo estado (en_atencion, atendido, pendiente)' });
     }
+
+    const current = await query('SELECT reporter_id FROM emergency_reports WHERE id=$1', [id]);
+    if (!current.rows.length) return res.status(404).json({ error: 'El reporte de emergencia no fue encontrado.' });
+    if (current.rows[0].reporter_id !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'lider_comunitario') {
+      return res.status(403).json({ error: 'Solo quien reportó o un responsable comunitario puede actualizar la atención.' });
+    }
+    if (!['pendiente', 'en_atencion', 'atendido'].includes(status)) return res.status(400).json({ error: 'Estado de atención inválido.' });
 
     const updateSql = `
       UPDATE emergency_reports
