@@ -9,6 +9,7 @@ import Tutorial from './features/tutorial/Tutorial'
 import MapPage from './features/map/MapPage'
 import { CATEGORIAS, ICONOS, OFERTAS_DEMO } from './data/demoData'
 import './App.css'
+import { OfflineWidget } from './offline/OfflineWidget';
 
 function PendingModule({ titulo, icono, texto, responsable, onBack }) {
   return <section className="pending-module container"><div className="pending-icon" aria-hidden="true">{icono}</div><h1>{titulo}</h1><p>{texto}</p><div className="info-panel">Este módulo será implementado por el {responsable}. Todavía no realiza operaciones reales.</div><button className="button-outline" type="button" onClick={onBack}>Volver al inicio</button></section>
@@ -70,5 +71,6 @@ export default function App() {
     </main>
     <BottomNav actual={esNav ? pantalla : ''} onNavigate={navegar}/>
     {mostrarPublicar && <PublishWizard onClose={() => setMostrarPublicar(false)} onCreate={publicar} />}
+    <OfflineWidget/>
   </div>
 }
