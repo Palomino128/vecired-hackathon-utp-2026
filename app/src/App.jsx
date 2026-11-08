@@ -25,12 +25,14 @@ import {
   crearPublicacion,
   subirImagenes,
   obtenerToken,
+  obtenerPerfil,
 } from './api/veciredApi'
 
 import {
   aOferta,
   aPublicacion,
 } from './api/adaptadores'
+import { obtenerAvatarUrl } from './api/perfilApi'
 
 import './App.css'
 import './styles/vecired-final.css'
@@ -41,6 +43,24 @@ import {
   sincronizarPendientes,
   obtenerIdVecinoActual,
 } from './offline/syncManager'
+
+// Foto en la cabecera: muestra fallback si todavía no hay avatar o falla la URL.
+function AvatarCabecera({ perfil }) {
+  const ruta = obtenerAvatarUrl(perfil?.avatar_url)
+  const [fallo, setFallo] = useState(false)
+  useEffect(() => setFallo(false), [ruta])
+
+  if (ruta && !fallo) {
+    return <img className="profile-trigger-image" src={ruta} alt="" onError={() => setFallo(true)} />
+  }
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  )
+}
 
 // Ofertas textuales guardadas localmente mientras no había red.
 function aOfertaPendiente(entrada) {
@@ -134,12 +154,55 @@ export default function App() {
   )
 
   const [aviso, setAviso] = useState('')
+  const [perfilCabecera, setPerfilCabecera] = useState(null)
 
   const [mapaDestacadoId, setMapaDestacadoId] =
     useState(null)
 
   const [modoDemostracion, setModoDemostracion] =
     useState(true)
+
+  // ----------------------------------------------------------
+  // REFRESCAR CABECERA AL CAMBIAR CUENTA O FOTO DE PERFIL
+  // ----------------------------------------------------------
+
+  useEffect(() => {
+    let montado = true
+    let solicitud = 0
+
+    async function consultarCuenta() {
+      const actual = ++solicitud
+      if (!obtenerToken()) {
+        if (montado) setPerfilCabecera(null)
+        return
+      }
+      try {
+        const perfil = await obtenerPerfil()
+        if (montado && actual === solicitud) setPerfilCabecera(perfil)
+      } catch {
+        if (montado && actual === solicitud) setPerfilCabecera(null)
+      }
+    }
+
+    function recibirPerfil(evento) {
+      const perfil = evento.detail?.perfil
+      if (perfil && obtenerToken()) {
+        solicitud += 1
+        if (montado) setPerfilCabecera(perfil)
+      } else {
+        consultarCuenta()
+      }
+    }
+
+    consultarCuenta()
+    window.addEventListener('vecired:auth-changed', consultarCuenta)
+    window.addEventListener('vecired:profile-updated', recibirPerfil)
+    return () => {
+      montado = false
+      window.removeEventListener('vecired:auth-changed', consultarCuenta)
+      window.removeEventListener('vecired:profile-updated', recibirPerfil)
+    }
+  }, [])
 
   // ----------------------------------------------------------
   // DETECTAR CONEXIÓN A INTERNET
@@ -303,6 +366,14 @@ export default function App() {
 
   const navegar = (destino) => {
     if (destino === 'publicar') {
+      if (!obtenerToken()) {
+        setMostrarPublicar(false)
+        setPantalla('cuenta')
+        setAviso('Para publicar una oferta, inicia sesión o crea tu cuenta vecinal.')
+        window.scrollTo({ top: 0, behavior: 'instant' })
+        return
+      }
+      setAviso('')
       setMostrarPublicar(true)
       return
     }
@@ -497,9 +568,9 @@ export default function App() {
             className="profile-trigger"
             type="button"
             onClick={() => navegar('cuenta')}
-            aria-label="Mi cuenta"
+            aria-label={perfilCabecera?.full_name ? `Mi cuenta: ${perfilCabecera.full_name}` : 'Mi cuenta'}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+            <AvatarCabecera perfil={perfilCabecera} />
           </button>
 
         </div>
@@ -758,7 +829,9 @@ export default function App() {
 
           <Account
             onBack={() => navegar('inicio')}
-            onTutorial={() => navegar('tutorial')} onMyItems={() => navegar('mis-publicaciones')} />
+            onTutorial={() => navegar('tutorial')}
+            onMyItems={() => navegar('mis-publicaciones')}
+            mensajeAcceso={!obtenerToken() ? aviso : ''} />
 
         )}
 

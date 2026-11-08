@@ -1,4 +1,5 @@
 import CategoryIcon from './CategoryIcon'
+import LocationPinIcon from './LocationPinIcon'
 
 import { useEffect, useState } from 'react'
 
@@ -61,7 +62,7 @@ export default function OfferCard({ oferta, onOpen }) {
         </span>
 
         <span className="offer-card-meta">
-          <span>📍 {oferta.zona}</span>
+          <span className="vecired-location"><LocationPinIcon />{oferta.zona}</span>
           <strong>{oferta.precio}</strong>
         </span>
 

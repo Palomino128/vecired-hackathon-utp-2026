@@ -15,6 +15,10 @@ const TIPOS = ['image/jpeg', 'image/png', 'image/webp']
 const TAMANO_MAXIMO = 5 * 1024 * 1024
 const ZONAS_DISPONIBLES = ZONAS.filter((z) => z !== 'Todas las zonas')
 
+function notificarPerfil(perfil) {
+  if (perfil) window.dispatchEvent(new CustomEvent('vecired:profile-updated', { detail: { perfil } }))
+}
+
 function Avatar({ ruta, nombre, preview, tamano = 82 }) {
   const url = preview || obtenerAvatarUrl(ruta)
   const [fallo, setFallo] = useState(false)
@@ -32,7 +36,7 @@ function Avatar({ ruta, nombre, preview, tamano = 82 }) {
   )
 }
 
-export default function Account({ onBack, onTutorial, onMyItems }) {
+export default function Account({ onBack, onTutorial, onMyItems, mensajeAcceso = '' }) {
   const [modo, setModo] = useState('inicio')
   const [datos, setDatos] = useState({ full_name: '', email: '', password: '', phone: '', neighborhood: 'Cercado' })
   const [perfil, setPerfil] = useState(null)
@@ -49,7 +53,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
     let activo = true
     if (obtenerToken()) {
       obtenerPerfil()
-        .then((p) => { if (activo) { setPerfil(p); setModo('perfil') } })
+        .then((p) => { if (activo) { setPerfil(p); setModo('perfil'); notificarPerfil(p) } })
         .catch(() => { if (activo) cerrarSesion() })
         .finally(() => { if (activo) setCargando(false) })
     }
@@ -116,6 +120,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
         }
         const actual = await obtenerPerfil().catch(() => respuesta?.user || null)
         setPerfil(actual)
+        notificarPerfil(actual)
         setModo('perfil')
         setAviso(advertencia || 'Cuenta creada correctamente. Bienvenido a VeciRed.')
         setDatos((anterior) => ({ ...anterior, password: '' }))
@@ -124,6 +129,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
         const respuesta = await iniciarSesion({ email: datos.email.trim(), password: datos.password })
         const actual = await obtenerPerfil().catch(() => respuesta?.user || null)
         setPerfil(actual)
+        notificarPerfil(actual)
         setModo('perfil')
         setDatos((anterior) => ({ ...anterior, password: '' }))
         setAviso('Sesión iniciada correctamente.')
@@ -150,6 +156,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
       if (!rutas?.[0]) throw new Error('El servidor no devolvió una fotografía.')
       const resultado = await actualizarPerfil({ avatar_url: rutas[0] })
       setPerfil(resultado)
+      notificarPerfil(resultado)
       setAviso('Fotografía de perfil actualizada.')
     } catch (e) {
       setError(e.message || 'No se pudo actualizar la fotografía.')
@@ -165,6 +172,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
     try {
       const resultado = await actualizarPerfil({ avatar_url: null })
       setPerfil(resultado)
+      notificarPerfil(resultado)
       setAviso('Fotografía de perfil retirada.')
     } catch (e) {
       setError(e.message || 'No se pudo retirar la fotografía.')
@@ -185,6 +193,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
         phone: edicion.phone,
       })
       setPerfil(resultado)
+      notificarPerfil(resultado)
       setEdicion(null)
       setAviso('Datos de tu perfil actualizados.')
     } catch (e) {
@@ -215,6 +224,7 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
       </div>
 
       <div className="detail-panel">
+        {mensajeAcceso && !perfil && <p className="info-panel" role="status">{mensajeAcceso}</p>}
         {cargando ? (
           <p>Comprobando sesión...</p>
         ) : perfil ? (
@@ -246,16 +256,18 @@ export default function Account({ onBack, onTutorial, onMyItems }) {
                     {ZONAS_DISPONIBLES.map((z) => <option key={z} value={z}>{z}</option>)}
                   </select>
                 </label>
-                <button className="button-primary" type="submit" disabled={ocupado}>Guardar cambios</button>{' '}
-                <button className="button-outline" type="button" onClick={() => setEdicion(null)} disabled={ocupado}>Cancelar</button>
+                <div className="account-edit-actions">
+                  <button className="button-primary" type="submit" disabled={ocupado}>Guardar cambios</button>
+                  <button className="button-outline" type="button" onClick={() => setEdicion(null)} disabled={ocupado}>Cancelar</button>
+                </div>
               </form>
             ) : (
-              <button className="button-outline" type="button" onClick={() => setEdicion({ full_name: perfil.full_name || '', phone: perfil.phone || '', neighborhood: perfil.neighborhood || 'Cercado' })}>Editar datos</button>
+              <div className="account-actions">
+                <button className="button-outline" type="button" onClick={() => setEdicion({ full_name: perfil.full_name || '', phone: perfil.phone || '', neighborhood: perfil.neighborhood || 'Cercado' })}>Editar datos</button>
+                <button className="button-primary" type="button" onClick={onMyItems}>Mis publicaciones</button>
+                <button className="button-outline" type="button" onClick={salir} disabled={ocupado}>Cerrar sesión</button>
+              </div>
             )}
-            {' '}
-            <button className="button-primary" type="button" onClick={onMyItems}>Mis publicaciones</button>
-            {' '}
-            <button className="button-outline" type="button" onClick={salir} disabled={ocupado}>Cerrar sesión</button>
           </>
         ) : (
           <>

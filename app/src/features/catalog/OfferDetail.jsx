@@ -1,4 +1,5 @@
 import CategoryIcon from '../../components/CategoryIcon'
+import LocationPinIcon from '../../components/LocationPinIcon'
 
 import { useEffect, useState } from 'react'
 
@@ -132,7 +133,7 @@ export default function OfferDetail({ oferta, onBack, onMap }) {
         className="button-outline offer-map-link"
         onClick={onMap}
       >
-        📍 Ver zona en el mapa
+        <LocationPinIcon /> Ver zona en el mapa
       </button>
 
       <p className="detail-description">

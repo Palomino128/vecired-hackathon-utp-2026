@@ -14,6 +14,24 @@ const INICIAL = {
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_MB = 5
 
+function VistasPrevias({ vistas, quitarImagen, guardando }) {
+  if (!vistas.length) return null
+  return (
+    <div className="vecired-foto-grid" aria-label="Fotografías seleccionadas">
+      {vistas.map((vista, indice) => (
+        <div className="vecired-foto-preview" key={vista.url}>
+          <img src={vista.url} alt={`Vista previa de fotografía ${indice + 1}`} />
+          <button type="button" className="back-link" disabled={guardando}
+            onClick={() => quitarImagen(indice)}
+            aria-label={`Quitar fotografía ${indice + 1}`}>
+            Quitar
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
   const [paso, setPaso] = useState(1)
   const [datos, setDatos] = useState(INICIAL)
@@ -21,6 +39,7 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
   const [vistas, setVistas] = useState([])
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [revisando, setRevisando] = useState(false)
 
   useEffect(() => {
     const cerrarEsc = (evento) => {
@@ -98,9 +117,14 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
   async function crear(evento) {
     evento.preventDefault()
 
-    // Impide que Enter publique antes de completar los tres pasos.
+    // Nunca publicar desde los pasos 1/2 ni desde los campos del paso 3.
+    // La confirmación final es obligatoria y explícita.
     if (paso !== 3) {
       siguiente()
+      return
+    }
+    if (!revisando) {
+      setRevisando(true)
       return
     }
 
@@ -165,11 +189,14 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
             disabled={guardando}
             aria-label="Cerrar formulario"
           >
-            ×
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
           </button>
         </header>
 
-        <div className="steps-label">Paso {paso} de 3</div>
+        <div className="steps-label">Paso {paso} de 3 {revisando ? " · Confirmación" : ""}</div>
 
         <div className="steps-progress" aria-hidden="true">
           <span style={{ width: `${(paso / 3) * 100}%` }} />
@@ -233,10 +260,31 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
                   }
                 />
               </label>
+
+              <div className="vecired-fotos-paso">
+                <strong>Fotografías del producto o servicio (opcional, máximo 3)</strong>
+                <PhotoFileField
+                  multiple
+                  count={archivos.length}
+                  onChange={seleccionarImagenes}
+                  disabled={!enLinea || archivos.length >= 3 || guardando}
+                />
+                <p className="hint">
+                  Puedes seleccionar JPG, PNG o WebP; hasta 5 MB por foto.
+                  En el siguiente paso podrás añadir o quitar imágenes antes de publicar.
+                </p>
+                {!enLinea && (
+                  <p className="hint" role="status">
+                    Estás sin conexión. Las fotos se añadirán cuando recuperes internet;
+                    por ahora solo podrás guardar texto pendiente.
+                  </p>
+                )}
+                <VistasPrevias vistas={vistas} quitarImagen={quitarImagen} guardando={guardando} />
+              </div>
             </div>
           )}
 
-          {paso === 3 && (
+          {paso === 3 && !revisando && (
             <div className="wizard-stage">
               <h3>Completa tu publicación</h3>
 
@@ -290,48 +338,30 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
                 </p>
               )}
 
-              {vistas.length > 0 && (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns:
-                      'repeat(3, minmax(0, 1fr))',
-                    gap: 10,
-                    marginTop: 12,
-                  }}
-                >
-                  {vistas.map((vista, indice) => (
-                    <div key={vista.url}>
-                      <img
-                        src={vista.url}
-                        alt={`Vista previa ${indice + 1}`}
-                        style={{
-                          display: 'block',
-                          width: '100%',
-                          aspectRatio: '1 / 1',
-                          objectFit: 'cover',
-                          borderRadius: 10,
-                        }}
-                      />
-
-                      <button
-                        type="button"
-                        className="back-link"
-                        disabled={guardando}
-                        onClick={() => quitarImagen(indice)}
-                        aria-label={`Quitar foto ${indice + 1}`}
-                      >
-                        Quitar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <VistasPrevias vistas={vistas} quitarImagen={quitarImagen} guardando={guardando} />
 
               <div className="info-panel">
                 Tu publicación se guardará en VeciRed y estará
                 disponible para otros vecinos.
               </div>
+            </div>
+          )}
+
+          {paso === 3 && revisando && (
+            <div className="wizard-stage vecired-review" role="region" aria-label="Revisión de publicación">
+              <h3>Revisa tu oferta antes de publicarla</h3>
+              <p>Nada se enviará hasta que pulses «Confirmar y publicar».</p>
+              <dl className="vecired-review-data">
+                <div><dt>Categoría</dt><dd>{datos.categoria}</dd></div>
+                <div><dt>Título</dt><dd>{datos.titulo.trim()}</dd></div>
+                <div><dt>Descripción</dt><dd>{datos.descripcion.trim()}</dd></div>
+                <div><dt>Barrio o distrito</dt><dd>{datos.zona}</dd></div>
+                <div><dt>Precio o modalidad</dt><dd>{datos.precio.trim() || 'A coordinar'}</dd></div>
+                <div><dt>Fotografías</dt><dd>{archivos.length} de 3</dd></div>
+              </dl>
+              <VistasPrevias vistas={vistas} quitarImagen={quitarImagen} guardando={guardando} />
+              {!enLinea && <p className="hint">Sin conexión: se guardará como publicación pendiente, sin fotografías.</p>}
+              <div className="info-panel">Comprueba los datos. Puedes volver a editarlos sin perder lo escrito.</div>
             </div>
           )}
 
@@ -348,11 +378,12 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
                 type="button"
                 disabled={guardando}
                 onClick={() => {
-                  setPaso((actual) => actual - 1)
+                  if (revisando) setRevisando(false)
+                  else setPaso((actual) => actual - 1)
                   setError('')
                 }}
               >
-                Atrás
+                {revisando ? 'Volver a editar' : 'Atrás'}
               </button>
             )}
 
@@ -362,7 +393,13 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
                 type="button"
                 onClick={siguiente}
               >
-                Continuar →
+                {paso === 2 ? 'Continuar a barrio, precio y fotos →' : 'Continuar →'}
+              </button>
+            ) : !revisando ? (
+              <button className="button-primary" type="button"
+                disabled={guardando}
+                onClick={() => { setRevisando(true); setError('') }}>
+                Revisar antes de publicar →
               </button>
             ) : (
               <button
@@ -373,8 +410,8 @@ export default function PublishWizard({ onClose, onCreate, enLinea = true }) {
                 {guardando
                   ? 'Guardando publicación...'
                   : enLinea
-                    ? 'Publicar oferta'
-                    : 'Guardar pendiente sin conexión'}
+                    ? 'Confirmar y publicar'
+                    : 'Confirmar guardado pendiente'}
               </button>
             )}
           </div>
